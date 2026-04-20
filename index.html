@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>조별 토의 앱</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:#f5f4f0;min-height:100vh;}
+.page{display:none;min-height:100vh;}
+.page.on{display:block;}
+#page-entry{display:flex;align-items:center;justify-content:center;min-height:100vh;}
+.entry-box{width:100%;max-width:440px;padding:20px;text-align:center;}
+.entry-box h1{font-size:32px;color:#1a4fd6;margin-bottom:8px;}
+.entry-box p{font-size:14px;color:#888;margin-bottom:32px;}
+.big-btn{display:block;width:100%;padding:20px;margin-bottom:12px;border:2px solid #1a1a1a;border-radius:6px;background:#fff;cursor:pointer;text-align:left;box-shadow:4px 4px 0 #1a1a1a;font-family:inherit;}
+.big-btn:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #1a1a1a;}
+.big-btn strong{display:block;font-size:17px;margin-bottom:4px;}
+.big-btn.blue strong{color:#1a4fd6;}
+.big-btn.purple strong{color:#6c35de;}
+.big-btn span{font-size:13px;color:#888;}
+header{background:#fff;border-bottom:2px solid #1a1a1a;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:99;}
+header h2{font-size:17px;color:#1a4fd6;}
+.hbtns{display:flex;gap:8px;}
+.btn{font-family:inherit;font-size:13px;font-weight:700;padding:8px 16px;border:2px solid #1a1a1a;border-radius:4px;background:#fff;cursor:pointer;box-shadow:2px 2px 0 #1a1a1a;}
+.btn.purple{background:#6c35de;color:#fff;border-color:#6c35de;}
+.wrap{max-width:600px;margin:0 auto;padding:24px 20px 60px;}
+.label{font-size:13px;font-weight:700;color:#444;margin-bottom:6px;display:block;}
+.inp{width:100%;font-family:inherit;font-size:15px;padding:12px;border:2px solid #1a1a1a;border-radius:4px;background:#fff;outline:none;margin-bottom:16px;}
+.inp:focus{border-color:#1a4fd6;}
+.cnt-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+.cnt-btn{width:48px;height:48px;border:2px solid #1a1a1a;border-radius:4px;background:#fff;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;}
+.cnt-btn.on{background:#1a4fd6;color:#fff;border-color:#1a4fd6;}
+.save-btn{width:100%;padding:16px;font-family:inherit;font-size:16px;font-weight:700;border:2px solid #1a4fd6;border-radius:4px;background:#1a4fd6;color:#fff;cursor:pointer;box-shadow:4px 4px 0 #1a1a1a;margin-top:8px;}
+.stu-head{background:#fff;border-bottom:2px solid #1a1a1a;padding:16px 20px;}
+.stu-head h2{font-size:17px;font-weight:900;margin-bottom:4px;}
+.stu-head p{font-size:12px;color:#888;}
+.grp-area{padding:20px;background:#fafaf8;border-bottom:1px solid #ccc;}
+.grp-area p{font-size:13px;font-weight:700;margin-bottom:10px;}
+.grp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.grp-btn{padding:12px 8px;border:2px solid #1a1a1a;border-radius:4px;background:#fff;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;box-shadow:2px 2px 0 #1a1a1a;text-align:center;}
+.grp-btn.on{background:#6c35de;color:#fff;border-color:#6c35de;}
+.col-wrap{padding:16px 20px;}
+.col-title{font-size:13px;font-weight:700;padding:8px 12px;border:2px solid #1a1a1a;border-radius:4px 4px 0 0;border-bottom:none;margin-top:16px;}
+.col-title.left{background:#bbdefb;}
+.col-title.right{background:#e8d5ff;}
+.col-ta{width:100%;font-family:inherit;font-size:14px;padding:12px;border:2px solid #1a1a1a;border-radius:0 0 4px 4px;background:#fff;outline:none;resize:none;min-height:130px;line-height:1.7;}
+.sub-area{padding:0 20px 20px;}
+.sub-btn{width:100%;padding:16px;font-family:inherit;font-size:16px;font-weight:700;border:2px solid #6c35de;border-radius:4px;background:#6c35de;color:#fff;cursor:pointer;box-shadow:4px 4px 0 #1a1a1a;}
+.status{font-size:13px;text-align:center;margin-top:10px;min-height:20px;color:#666;}
+.status.ok{color:#2e7d32;font-weight:700;}
+.status.err{color:#d63b1a;font-weight:700;}
+@media(min-width:640px){.col-wrap{display:flex;gap:16px;}.col-wrap>div{flex:1;}.col-title{margin-top:0;}}
+.res-inner{padding:20px;}
+.res-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;}
+.res-top h2{font-size:20px;font-weight:900;}
+.res-labels{display:flex;gap:8px;margin-bottom:16px;font-size:12px;font-weight:700;}
+.res-labels span{padding:4px 10px;border:1px solid #ccc;border-radius:2px;}
+.lbl-left{background:#bbdefb;}
+.lbl-right{background:#e8d5ff;}
+.res-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;}
+.res-card{border:2px solid #1a1a1a;border-radius:4px;background:#fff;box-shadow:4px 4px 0 #1a1a1a;overflow:hidden;}
+.res-card-head{background:#1a1a1a;color:#fff;padding:8px 14px;display:flex;align-items:center;justify-content:space-between;}
+.res-card-head strong{font-size:16px;}
+.res-card-head small{font-size:11px;opacity:0.6;}
+.res-card-body{display:flex;}
+.res-col{flex:1;padding:12px;min-height:120px;}
+.res-col.left{background:#f0f4ff;border-right:1px solid #ddd;}
+.res-col.right{background:#f5f0ff;}
+.res-col h4{font-size:11px;font-weight:700;color:#666;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #ddd;}
+.res-col p{font-size:13px;line-height:1.8;white-space:pre-wrap;word-break:break-all;}
+.res-col p.empty{color:#bbb;font-style:italic;}
+footer{text-align:center;font-size:11px;color:#aaa;padding:20px;border-top:1px solid #ddd;margin-top:40px;}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(80px);background:#1a1a1a;color:#fff;padding:12px 24px;border-radius:30px;font-size:14px;font-weight:600;z-index:999;transition:transform 0.3s;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<div class="page on" id="page-entry">
+  <div class="entry-box">
+    <h1>📋 조별 토의</h1>
+    <p>역할을 선택해 시작하세요</p>
+    <button class="big-btn blue" id="btn-instructor">
+      <strong>🎓 강사 모드</strong>
+      <span>토의 주제 설정 및 전체 결과 취합·확인</span>
+    </button>
+    <button class="big-btn purple" id="btn-student">
+      <strong>✏️ 참여자 모드</strong>
+      <span>조별 토의 내용 입력 및 제출</span>
+    </button>
+  </div>
+</div>
+
+<div class="page" id="page-instructor">
+  <header>
+    <h2>🎓 강사 설정</h2>
+    <div class="hbtns">
+      <button class="btn" id="btn-back1">← 뒤로</button>
+      <button class="btn purple" id="btn-result">결과 보기 →</button>
+    </div>
+  </header>
+  <div class="wrap">
+    <label class="label">토의 제목</label>
+    <input class="inp" id="cfg-title" placeholder="예: P1 승진자에게 기대하는 역할"/>
+    <label class="label">좌측 영역 제목</label>
+    <input class="inp" id="cfg-left" placeholder="예: 상사/조직이 기대하는 역할"/>
+    <label class="label">우측 영역 제목</label>
+    <input class="inp" id="cfg-right" placeholder="예: 동료/부하가 기대하는 역할"/>
+    <label class="label">조 수 설정</label>
+    <div class="cnt-row" id="cnt-row"></div>
+    <button class="save-btn" id="btn-save">💾 설정 저장 및 세션 시작</button>
+  </div>
+  <footer>Copyright 2026 Learn and Insight All Rights Reserved.</footer>
+</div>
+
+<div class="page" id="page-student">
+  <div class="stu-head">
+    <h2 id="stu-title">토의 주제</h2>
+    <p>조를 선택하고 토의 내용을 입력해 제출하세요</p>
+  </div>
+  <div class="grp-area">
+    <p>우리 조를 선택하세요</p>
+    <div class="grp-grid" id="grp-grid"></div>
+  </div>
+  <div class="col-wrap">
+    <div>
+      <div class="col-title left" id="stu-left-title">좌측 영역</div>
+      <textarea class="col-ta" id="stu-left" placeholder="내용을 입력하세요"></textarea>
+    </div>
+    <div>
+      <div class="col-title right" id="stu-right-title">우측 영역</div>
+      <textarea class="col-ta" id="stu-right" placeholder="내용을 입력하세요"></textarea>
+    </div>
+  </div>
+  <div class="sub-area">
+    <button class="sub-btn" id="btn-submit">📤 제출하기</button>
+    <div class="status" id="sub-status"></div>
+  </div>
+  <div style="padding:0 20px 20px;">
+    <button class="btn" id="btn-back2">← 처음으로</button>
+  </div>
+  <footer>Copyright 2026 Learn and Insight All Rights Reserved.</footer>
+</div>
+
+<div class="page" id="page-result">
+  <header>
+    <h2>📊 전체 결과</h2>
+    <div class="hbtns">
+      <button class="btn" id="btn-setting">⚙ 설정</button>
+      <button class="btn" id="btn-back3">← 처음</button>
+    </div>
+  </header>
+  <div class="res-inner">
+    <div class="res-top">
+      <h2 id="res-title">토의 주제</h2>
+      <span style="font-size:12px;color:#888;">🔴 실시간 연동 중</span>
+    </div>
+    <div class="res-labels">
+      <span class="lbl-left" id="res-left-lbl">좌측</span>
+      <span class="lbl-right" id="res-right-lbl">우측</span>
+    </div>
+    <div class="res-grid" id="res-grid"></div>
+  </div>
+  <footer>Copyright 2026 Learn and Insight All Rights Reserved.</footer>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script>
+var db;
+try {
+  firebase.initializeApp({
+    apiKey:"AIzaSyB0iBxaN-pH-xnUav6ZskUEjqSmsi-Zf0I",
+    authDomain:"group-discussion-app-38191.firebaseapp.com",
+    databaseURL:"https://group-discussion-app-38191-default-rtdb.firebaseio.com",
+    projectId:"group-discussion-app-38191",
+    storageBucket:"group-discussion-app-38191.firebasestorage.app",
+    messagingSenderId:"486226117298",
+    appId:"1:486226117298:web:3154b962d1f5316fa8ffab"
+  });
+  db = firebase.database();
+} catch(e) { console.log('Firebase 초기화 오류:', e); }
+
+var selGroupCount = 4;
+var selGroup = null;
+var cfg = {title:'',leftLabel:'',rightLabel:'',groupCount:4};
+
+function toast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2500);
+}
+
+function go(id) {
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('on'); });
+  document.getElementById(id).classList.add('on');
+  if(id==='page-instructor') initInstructor();
+  if(id==='page-student') initStudent();
+  if(id==='page-result') initResult();
+}
+
+function buildCntRow() {
+  var r = document.getElementById('cnt-row');
+  r.innerHTML = '';
+  for(var i=1;i<=8;i++) {
+    (function(n){
+      var b = document.createElement('button');
+      b.className = 'cnt-btn' + (n===selGroupCount?' on':'');
+      b.textContent = n+'조';
+      b.addEventListener('click', function(){
+        selGroupCount = n;
+        buildCntRow();
+      });
+      r.appendChild(b);
+    })(i);
+  }
+}
+
+function initInstructor() {
+  buildCntRow();
+  if(!db) return;
+  db.ref('config').once('value').then(function(s){
+    var d = s.val();
+    if(d){
+      document.getElementById('cfg-title').value = d.title||'';
+      document.getElementById('cfg-left').value = d.leftLabel||'';
+      document.getElementById('cfg-right').value = d.rightLabel||'';
+      selGroupCount = d.groupCount||4;
+      buildCntRow();
+    }
+  }).catch(function(){});
+}
+
+function saveConfig() {
+  var title = document.getElementById('cfg-title').value.trim();
+  var left = document.getElementById('cfg-left').value.trim();
+  var right = document.getElementById('cfg-right').value.trim();
+  if(!title){ toast('⚠️ 토의 제목을 입력하세요'); return; }
+  if(!left){ toast('⚠️ 좌측 영역 제목을 입력하세요'); return; }
+  if(!right){ toast('⚠️ 우측 영역 제목을 입력하세요'); return; }
+  if(!db){ toast('❌ Firebase 연결 오류'); return; }
+  db.ref('config').set({
+    title:title, leftLabel:left, rightLabel:right,
+    groupCount:selGroupCount, updatedAt:Date.now()
+  }).then(function(){ toast('✅ 설정 저장 완료!'); })
+  .catch(function(e){ toast('❌ 저장 실패: '+e.message); });
+}
+
+function buildGrpGrid(count) {
+  var g = document.getElementById('grp-grid');
+  g.innerHTML = '';
+  for(var i=1;i<=count;i++){
+    (function(n){
+      var b = document.createElement('button');
+      b.className = 'grp-btn'+(selGroup===n?' on':'');
+      b.textContent = n+'조';
+      b.addEventListener('click', function(){
+        selGroup = n;
+        buildGrpGrid(count);
+        if(!db) return;
+        db.ref('answers/group'+n).once('value').then(function(s){
+          var d = s.val();
+          document.getElementById('stu-left').value = d&&d.left?d.left:'';
+          document.getElementById('stu-right').value = d&&d.right?d.right:'';
+        }).catch(function(){});
+      });
+      g.appendChild(b);
+    })(i);
+  }
+}
+
+function initStudent() {
+  selGroup = null;
+  if(!db){
+    document.getElementById('stu-title').textContent = 'Firebase 연결 오류';
+    buildGrpGrid(8);
+    return;
+  }
+  db.ref('config').once('value').then(function(s){
+    var d = s.val();
+    if(d){
+      cfg = d;
+      document.getElementById('stu-title').textContent = d.title||'토의 주제';
+      document.getElementById('stu-left-title').textContent = d.leftLabel||'좌측 영역';
+      document.getElementById('stu-right-title').textContent = d.rightLabel||'우측 영역';
+      buildGrpGrid(d.groupCount||4);
+    } else {
+      document.getElementById('stu-title').textContent = '강사가 먼저 설정을 저장해야 합니다';
+      buildGrpGrid(8);
+    }
+  }).catch(function(){
+    document.getElementById('stu-title').textContent = '연결 오류. 잠시 후 다시 시도하세요';
+    buildGrpGrid(8);
+  });
+}
+
+function submitAnswer() {
+  if(!selGroup){ toast('⚠️ 조를 먼저 선택하세요'); return; }
+  var left = document.getElementById('stu-left').value.trim();
+  var right = document.getElementById('stu-right').value.trim();
+  if(!left&&!right){ toast('⚠️ 내용을 입력해 주세요'); return; }
+  if(!db){ toast('❌ Firebase 연결 오류'); return; }
+  var st = document.getElementById('sub-status');
+  st.textContent = '전송 중...'; st.className = 'status';
+  db.ref('answers/group'+selGroup).set({
+    left:left, right:right, groupNum:selGroup, submittedAt:Date.now()
+  }).then(function(){
+    st.textContent = '✅ '+selGroup+'조 제출 완료!';
+    st.className = 'status ok';
+    toast('✅ '+selGroup+'조 제출 완료!');
+  }).catch(function(){
+    st.textContent = '❌ 제출 실패. 다시 시도해 주세요.';
+    st.className = 'status err';
+  });
+}
+
+function esc(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function renderCards(count, answers) {
+  var g = document.getElementById('res-grid');
+  g.innerHTML = '';
+  for(var i=1;i<=count;i++){
+    var d = answers['group'+i];
+    var has = d&&(d.left||d.right);
+    var time = '미제출';
+    if(d&&d.submittedAt){
+      var dt = new Date(d.submittedAt);
+      time = dt.getHours().toString().padStart(2,'0')+':'+dt.getMinutes().toString().padStart(2,'0');
+    }
+    var c = document.createElement('div');
+    c.className = 'res-card';
+    c.innerHTML = '<div class="res-card-head"><strong>'+i+'조</strong><small>'+time+'</small></div>'+
+      '<div class="res-card-body">'+
+      '<div class="res-col left"><h4>'+(cfg.leftLabel||'좌측')+'</h4><p class="'+(has&&d.left?'':'empty')+'">'+(has&&d.left?esc(d.left):'(미입력)')+'</p></div>'+
+      '<div class="res-col right"><h4>'+(cfg.rightLabel||'우측')+'</h4><p class="'+(has&&d.right?'':'empty')+'">'+(has&&d.right?esc(d.right):'(미입력)')+'</p></div>'+
+      '</div>';
+    g.appendChild(c);
+  }
+}
+
+function initResult() {
+  if(!db){ toast('❌ Firebase 연결 오류'); return; }
+  db.ref('config').once('value').then(function(s){
+    var d = s.val()||{};
+    cfg = d;
+    document.getElementById('res-title').textContent = d.title||'토의 주제';
+    document.getElementById('res-left-lbl').textContent = d.leftLabel||'좌측';
+    document.getElementById('res-right-lbl').textContent = d.rightLabel||'우측';
+    renderCards(d.groupCount||4, {});
+    db.ref('answers').on('value', function(snap){
+      renderCards(d.groupCount||4, snap.val()||{});
+    });
+  }).catch(function(){ toast('❌ 데이터 불러오기 실패'); });
+}
+
+// 버튼 이벤트 등록
+document.getElementById('btn-instructor').addEventListener('click', function(){ go('page-instructor'); });
+document.getElementById('btn-student').addEventListener('click', function(){ go('page-student'); });
+document.getElementById('btn-back1').addEventListener('click', function(){ go('page-entry'); });
+document.getElementById('btn-result').addEventListener('click', function(){ go('page-result'); });
+document.getElementById('btn-save').addEventListener('click', saveConfig);
+document.getElementById('btn-back2').addEventListener('click', function(){ go('page-entry'); });
+document.getElementById('btn-submit').addEventListener('click', submitAnswer);
+document.getElementById('btn-setting').addEventListener('click', function(){ go('page-instructor'); });
+document.getElementById('btn-back3').addEventListener('click', function(){ go('page-entry'); });
+</script>
+</body>
+</html>
