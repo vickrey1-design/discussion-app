@@ -1,3 +1,8 @@
+네, 빅쌤. 아래 코드 전체 복사해서 GitHub에 붙여넣기 하세요.
+
+코드 박스 오른쪽 상단 복사 버튼 클릭하면 됩니다.
+
+```html
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -7,9 +12,9 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:#f5f4f0;min-height:100vh;}
-.page{display:none;}
-.page.on{display:block;min-height:100vh;}
-#page-entry{display:flex;align-items:center;justify-content:center;min-height:100vh;}
+.page{display:none !important;}
+.page.on{display:block !important;min-height:100vh;}
+#page-entry{display:flex !important;align-items:center;justify-content:center;min-height:100vh;}
 .entry-box{width:100%;max-width:440px;padding:20px;text-align:center;}
 .entry-box h1{font-size:32px;color:#1a4fd6;margin-bottom:8px;}
 .entry-box p{font-size:14px;color:#888;margin-bottom:32px;}
@@ -75,7 +80,6 @@ footer{text-align:center;font-size:11px;color:#aaa;padding:20px;border-top:1px s
 </head>
 <body>
 <div class="toast" id="toast"></div>
-
 <div class="page on" id="page-entry">
   <div class="entry-box">
     <h1>📋 조별 토의</h1>
@@ -90,7 +94,6 @@ footer{text-align:center;font-size:11px;color:#aaa;padding:20px;border-top:1px s
     </button>
   </div>
 </div>
-
 <div class="page" id="page-instructor">
   <header>
     <h2>🎓 강사 설정</h2>
@@ -112,7 +115,6 @@ footer{text-align:center;font-size:11px;color:#aaa;padding:20px;border-top:1px s
   </div>
   <footer>Copyright 2026 Learn and Insight All Rights Reserved.</footer>
 </div>
-
 <div class="page" id="page-student">
   <div class="stu-head">
     <h2 id="stu-title">토의 주제</h2>
@@ -141,7 +143,6 @@ footer{text-align:center;font-size:11px;color:#aaa;padding:20px;border-top:1px s
   </div>
   <footer>Copyright 2026 Learn and Insight All Rights Reserved.</footer>
 </div>
-
 <div class="page" id="page-result">
   <header>
     <h2>📊 전체 결과</h2>
@@ -151,9 +152,7 @@ footer{text-align:center;font-size:11px;color:#aaa;padding:20px;border-top:1px s
     </div>
   </header>
   <div class="res-inner">
-    <div class="res-top">
-      <h2 id="res-title">토의 주제</h2>
-    </div>
+    <div class="res-top"><h2 id="res-title">토의 주제</h2></div>
     <div class="res-labels">
       <span class="lbl-left" id="res-left-lbl">좌측</span>
       <span class="lbl-right" id="res-right-lbl">우측</span>
@@ -162,190 +161,28 @@ footer{text-align:center;font-size:11px;color:#aaa;padding:20px;border-top:1px s
   </div>
   <footer>Copyright 2026 Learn and Insight All Rights Reserved.</footer>
 </div>
-
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 <script>
-var db = null;
-var selGroupCount = 4;
-var selGroup = null;
-var cfg = {};
-
-// Firebase 초기화
-try {
-  firebase.initializeApp({
-    apiKey:"AIzaSyB0iBxaN-pH-xnUav6ZskUEjqSmsi-Zf0I",
-    authDomain:"group-discussion-app-38191.firebaseapp.com",
-    databaseURL:"https://group-discussion-app-38191-default-rtdb.firebaseio.com",
-    projectId:"group-discussion-app-38191",
-    storageBucket:"group-discussion-app-38191.firebasestorage.app",
-    messagingSenderId:"486226117298",
-    appId:"1:486226117298:web:3154b962d1f5316fa8ffab"
-  });
-  db = firebase.database();
-} catch(e) {}
-
-// 토스트
-function toast(msg) {
-  var t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(function(){ t.classList.remove('show'); }, 2500);
-}
-
-// 화면 전환 - onclick에서 직접 호출
-function go(id) {
-  var pages = document.querySelectorAll('.page');
-  for(var i=0; i<pages.length; i++) {
-    pages[i].classList.remove('on');
-  }
-  document.getElementById(id).classList.add('on');
-  if(id==='page-instructor') initInstructor();
-  if(id==='page-student') initStudent();
-  if(id==='page-result') initResult();
-}
-
-// 조 수 버튼
-function buildCntRow() {
-  var r = document.getElementById('cnt-row');
-  r.innerHTML = '';
-  for(var i=1; i<=8; i++) {
-    var b = document.createElement('button');
-    b.className = 'cnt-btn' + (i===selGroupCount?' on':'');
-    b.textContent = i+'조';
-    b.setAttribute('data-n', i);
-    b.onclick = function() {
-      selGroupCount = parseInt(this.getAttribute('data-n'));
-      buildCntRow();
-    };
-    r.appendChild(b);
-  }
-}
-
-function initInstructor() {
-  buildCntRow();
-  if(!db) return;
-  db.ref('config').once('value').then(function(s){
-    var d = s.val();
-    if(d) {
-      document.getElementById('cfg-title').value = d.title||'';
-      document.getElementById('cfg-left').value = d.leftLabel||'';
-      document.getElementById('cfg-right').value = d.rightLabel||'';
-      selGroupCount = d.groupCount||4;
-      buildCntRow();
-    }
-  });
-}
-
-function saveConfig() {
-  var title = document.getElementById('cfg-title').value.trim();
-  var left = document.getElementById('cfg-left').value.trim();
-  var right = document.getElementById('cfg-right').value.trim();
-  if(!title){ toast('⚠️ 토의 제목을 입력하세요'); return; }
-  if(!left){ toast('⚠️ 좌측 영역 제목을 입력하세요'); return; }
-  if(!right){ toast('⚠️ 우측 영역 제목을 입력하세요'); return; }
-  if(!db){ toast('❌ Firebase 연결 오류'); return; }
-  db.ref('config').set({title:title,leftLabel:left,rightLabel:right,groupCount:selGroupCount,updatedAt:Date.now()})
-    .then(function(){ toast('✅ 설정 저장 완료!'); })
-    .catch(function(e){ toast('❌ 저장 실패: '+e.message); });
-}
-
-function buildGrpGrid(count) {
-  var g = document.getElementById('grp-grid');
-  g.innerHTML = '';
-  for(var i=1; i<=count; i++) {
-    var b = document.createElement('button');
-    b.className = 'grp-btn' + (selGroup===i?' on':'');
-    b.textContent = i+'조';
-    b.setAttribute('data-n', i);
-    b.onclick = function() {
-      selGroup = parseInt(this.getAttribute('data-n'));
-      buildGrpGrid(count);
-      if(!db) return;
-      db.ref('answers/group'+selGroup).once('value').then(function(s){
-        var d = s.val();
-        document.getElementById('stu-left').value = d&&d.left?d.left:'';
-        document.getElementById('stu-right').value = d&&d.right?d.right:'';
-      });
-    };
-    g.appendChild(b);
-  }
-}
-
-function initStudent() {
-  selGroup = null;
-  if(!db) { buildGrpGrid(8); return; }
-  db.ref('config').once('value').then(function(s){
-    var d = s.val();
-    if(d) {
-      cfg = d;
-      document.getElementById('stu-title').textContent = d.title||'토의 주제';
-      document.getElementById('stu-left-title').textContent = d.leftLabel||'좌측 영역';
-      document.getElementById('stu-right-title').textContent = d.rightLabel||'우측 영역';
-      buildGrpGrid(d.groupCount||4);
-    } else {
-      buildGrpGrid(8);
-    }
-  }).catch(function(){ buildGrpGrid(8); });
-}
-
-function submitAnswer() {
-  if(!selGroup){ toast('⚠️ 조를 먼저 선택하세요'); return; }
-  var left = document.getElementById('stu-left').value.trim();
-  var right = document.getElementById('stu-right').value.trim();
-  if(!left&&!right){ toast('⚠️ 내용을 입력해 주세요'); return; }
-  if(!db){ toast('❌ Firebase 연결 오류'); return; }
-  var st = document.getElementById('sub-status');
-  st.textContent = '전송 중...';
-  db.ref('answers/group'+selGroup).set({left:left,right:right,groupNum:selGroup,submittedAt:Date.now()})
-    .then(function(){
-      st.textContent = '✅ '+selGroup+'조 제출 완료!';
-      st.className = 'status ok';
-      toast('✅ '+selGroup+'조 제출 완료!');
-    }).catch(function(){
-      st.textContent = '❌ 제출 실패';
-      st.className = 'status err';
-    });
-}
-
-function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-function renderCards(count, answers) {
-  var g = document.getElementById('res-grid');
-  g.innerHTML = '';
-  for(var i=1; i<=count; i++) {
-    var d = answers['group'+i];
-    var has = d&&(d.left||d.right);
-    var time = '미제출';
-    if(d&&d.submittedAt){
-      var dt = new Date(d.submittedAt);
-      time = ('0'+dt.getHours()).slice(-2)+':'+('0'+dt.getMinutes()).slice(-2);
-    }
-    var c = document.createElement('div');
-    c.className = 'res-card';
-    c.innerHTML = '<div class="res-card-head"><strong>'+i+'조</strong><small>'+time+'</small></div>'+
-      '<div class="res-card-body">'+
-      '<div class="res-col left"><h4>'+(cfg.leftLabel||'좌측')+'</h4><p class="'+(has&&d.left?'':'empty')+'">'+(has&&d.left?esc(d.left):'(미입력)')+'</p></div>'+
-      '<div class="res-col right"><h4>'+(cfg.rightLabel||'우측')+'</h4><p class="'+(has&&d.right?'':'empty')+'">'+(has&&d.right?esc(d.right):'(미입력)')+'</p></div>'+
-      '</div>';
-    g.appendChild(c);
-  }
-}
-
-function initResult() {
-  if(!db){ toast('❌ Firebase 연결 오류'); return; }
-  db.ref('config').once('value').then(function(s){
-    var d = s.val()||{};
-    cfg = d;
-    document.getElementById('res-title').textContent = d.title||'토의 주제';
-    document.getElementById('res-left-lbl').textContent = d.leftLabel||'좌측';
-    document.getElementById('res-right-lbl').textContent = d.rightLabel||'우측';
-    renderCards(d.groupCount||4, {});
-    db.ref('answers').on('value', function(snap){
-      renderCards(d.groupCount||4, snap.val()||{});
-    });
-  }).catch(function(){ toast('❌ 데이터 불러오기 실패'); });
-}
+var db=null,sgc=4,sg=null,cfg={};
+try{
+  firebase.initializeApp({apiKey:"AIzaSyB0iBxaN-pH-xnUav6ZskUEjqSmsi-Zf0I",authDomain:"group-discussion-app-38191.firebaseapp.com",databaseURL:"https://group-discussion-app-38191-default-rtdb.firebaseio.com",projectId:"group-discussion-app-38191",storageBucket:"group-discussion-app-38191.firebasestorage.app",messagingSenderId:"486226117298",appId:"1:486226117298:web:3154b962d1f5316fa8ffab"});
+  db=firebase.database();
+}catch(e){}
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2500);}
+function go(id){document.querySelectorAll('.page').forEach(function(p){p.classList.remove('on')});document.getElementById(id).classList.add('on');if(id==='page-instructor')initI();if(id==='page-student')initS();if(id==='page-result')initR();}
+function buildCR(){var r=document.getElementById('cnt-row');r.innerHTML='';for(var i=1;i<=8;i++){var b=document.createElement('button');b.className='cnt-btn'+(i===sgc?' on':'');b.textContent=i+'조';b.setAttribute('data-n',i);b.onclick=function(){sgc=parseInt(this.getAttribute('data-n'));buildCR();};r.appendChild(b);}}
+function initI(){buildCR();if(!db)return;db.ref('config').once('value').then(function(s){var d=s.val();if(d){document.getElementById('cfg-title').value=d.title||'';document.getElementById('cfg-left').value=d.leftLabel||'';document.getElementById('cfg-right').value=d.rightLabel||'';sgc=d.groupCount||4;buildCR();}});}
+function saveConfig(){var t=document.getElementById('cfg-title').value.trim(),l=document.getElementById('cfg-left').value.trim(),r=document.getElementById('cfg-right').value.trim();if(!t){toast('⚠️ 토의 제목을 입력하세요');return;}if(!l){toast('⚠️ 좌측 영역 제목을 입력하세요');return;}if(!r){toast('⚠️ 우측 영역 제목을 입력하세요');return;}if(!db){toast('❌ Firebase 연결 오류');return;}db.ref('config').set({title:t,leftLabel:l,rightLabel:r,groupCount:sgc,updatedAt:Date.now()}).then(function(){toast('✅ 설정 저장 완료!');}).catch(function(e){toast('❌ 저장 실패: '+e.message);});}
+function buildGG(cnt){var g=document.getElementById('grp-grid');g.innerHTML='';for(var i=1;i<=cnt;i++){var b=document.createElement('button');b.className='grp-btn'+(sg===i?' on':'');b.textContent=i+'조';b.setAttribute('data-n',i);b.onclick=function(){sg=parseInt(this.getAttribute('data-n'));buildGG(cnt);if(!db)return;db.ref('answers/group'+sg).once('value').then(function(s){var d=s.val();document.getElementById('stu-left').value=d&&d.left?d.left:'';document.getElementById('stu-right').value=d&&d.right?d.right:'';});};g.appendChild(b);}}
+function initS(){sg=null;if(!db){buildGG(4);return;}db.ref('config').once('value').then(function(s){var d=s.val();if(d){cfg=d;document.getElementById('stu-title').textContent=d.title||'토의 주제';document.getElementById('stu-left-title').textContent=d.leftLabel||'좌측 영역';document.getElementById('stu-right-title').textContent=d.rightLabel||'우측 영역';buildGG(d.groupCount||4);}else{buildGG(4);}}).catch(function(){buildGG(4);});}
+function submitAnswer(){if(!sg){toast('⚠️ 조를 먼저 선택하세요');return;}var l=document.getElementById('stu-left').value.trim(),r=document.getElementById('stu-right').value.trim();if(!l&&!r){toast('⚠️ 내용을 입력해 주세요');return;}if(!db){toast('❌ Firebase 연결 오류');return;}var st=document.getElementById('sub-status');st.textContent='전송 중...';db.ref('answers/group'+sg).set({left:l,right:r,groupNum:sg,submittedAt:Date.now()}).then(function(){st.textContent='✅ '+sg+'조 제출 완료!';st.className='status ok';toast('✅ '+sg+'조 제출 완료!');}).catch(function(){st.textContent='❌ 제출 실패';st.className='status err';});}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function renderCards(cnt,ans){var g=document.getElementById('res-grid');g.innerHTML='';for(var i=1;i<=cnt;i++){var d=ans['group'+i],has=d&&(d.left||d.right),time='미제출';if(d&&d.submittedAt){var dt=new Date(d.submittedAt);time=('0'+dt.getHours()).slice(-2)+':'+('0'+dt.getMinutes()).slice(-2);}var c=document.createElement('div');c.className='res-card';c.innerHTML='<div class="res-card-head"><strong>'+i+'조</strong><small>'+time+'</small></div><div class="res-card-body"><div class="res-col left"><h4>'+(cfg.leftLabel||'좌측')+'</h4><p class="'+(has&&d.left?'':'empty')+'">'+(has&&d.left?esc(d.left):'(미입력)')+'</p></div><div class="res-col right"><h4>'+(cfg.rightLabel||'우측')+'</h4><p class="'+(has&&d.right?'':'empty')+'">'+(has&&d.right?esc(d.right):'(미입력)')+'</p></div></div>';g.appendChild(c);}}
+function initR(){if(!db){toast('❌ Firebase 연결 오류');return;}db.ref('config').once('value').then(function(s){var d=s.val()||{};cfg=d;document.getElementById('res-title').textContent=d.title||'토의 주제';document.getElementById('res-left-lbl').textContent=d.leftLabel||'좌측';document.getElementById('res-right-lbl').textContent=d.rightLabel||'우측';renderCards(d.groupCount||4,{});db.ref('answers').on('value',function(snap){renderCards(d.groupCount||4,snap.val()||{});});}).catch(function(){toast('❌ 데이터 불러오기 실패');});}
 </script>
 </body>
 </html>
+```
+
+복사 후 GitHub 편집창에 Ctrl+A → Delete → Ctrl+V → Commit changes 누르세요.
